@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OrderCreate_Response xmlns="http://company.com/xi/Sales">
+  <Status>SUCCESS</Status>
+  <SAPSalesOrder>4500098712</SAPSalesOrder>
+  <ProcessingTimestamp>{{$isoTimestamp}}</ProcessingTimestamp>
+  <MessageGuid>{{$guid}}</MessageGuid>
+</OrderCreate_Response>

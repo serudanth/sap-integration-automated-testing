@@ -1,0 +1,35 @@
+[
+  {
+    "id": "sap-dev",
+    "label": "SAP PI/PO Development System",
+    "host": "sap-dev.internal",
+    "port": 50000,
+    "user": "PI_TEST_USER",
+    "password": "SecretPassword123",
+    "https": false,
+    "insecure": false,
+    "isProduction": false
+  },
+  {
+    "id": "sap-qa",
+    "label": "SAP PI/PO Quality Assurance",
+    "host": "sap-qa.internal",
+    "port": 50001,
+    "user": "PI_QA_USER",
+    "password": "SecretPassword123",
+    "https": true,
+    "insecure": true,
+    "isProduction": false
+  },
+  {
+    "id": "cpi-dev",
+    "label": "SAP BTP Integration Suite Dev Tenant",
+    "host": "tenant-dev.it-cpi001.cfapps.eu10.hana.ondemand.com",
+    "port": 443,
+    "user": "sb-client-id!b123",
+    "password": "client-secret-value",
+    "https": true,
+    "insecure": false,
+    "isProduction": false
+  }
+]

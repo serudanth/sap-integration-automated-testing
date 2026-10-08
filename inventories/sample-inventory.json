@@ -1,0 +1,123 @@
+{
+  "_meta": {
+    "id": "sample-inventory-01",
+    "hostId": "spd100",
+    "hostLabel": "SPD",
+    "sapUser": "cpc9181",
+    "extractedAt": "2026-10-08T05:07:18.555Z",
+    "partial": false,
+    "icoCount": 3,
+    "icoQueriedCount": 3,
+    "channelCount": 3,
+    "channelQueriedCount": 3
+  },
+  "summary": {
+    "icoCount": 3,
+    "icoQueriedCount": 3,
+    "channelCount": 3,
+    "channelQueriedCount": 3,
+    "senderChannelCount": 2,
+    "receiverChannelCount": 1,
+    "warnings": []
+  },
+  "integratedConfigurations": [
+    {
+      "MasterLanguage": "EN",
+      "IntegratedConfigurationID": {
+        "SenderPartyID": "",
+        "SenderComponentID": "BC_DMALL",
+        "InterfaceName": "ZRFC_MD_UPDATE_CUSTOMER",
+        "InterfaceNamespace": "urn:sap-com:document:sap:rfc:functions",
+        "ReceiverPartyID": "",
+        "ReceiverComponentID": "SRD100"
+      },
+      "InboundProcessing": {
+        "SenderInterfaceSoftwareComponentVersion": "",
+        "CommunicationChannel": {
+          "PartyID": "",
+          "ComponentID": "BC_DMALL",
+          "ChannelID": "CC_SMM_RFC_SENDER"
+        },
+        "SchemaValidationIndicator": "false"
+      },
+      "ReceiverInterfaces": [
+        {
+          "Receiver": {
+            "PartyID": "",
+            "ComponentID": "SRD100"
+          },
+          "QualityOfService": "EO"
+        }
+      ]
+    },
+    {
+      "MasterLanguage": "EN",
+      "IntegratedConfigurationID": {
+        "SenderPartyID": "",
+        "SenderComponentID": "POS_SYSTEM",
+        "InterfaceName": "SalesOrder_OB",
+        "InterfaceNamespace": "http://company.com/xi/Sales",
+        "ReceiverPartyID": "",
+        "ReceiverComponentID": "S4HANA"
+      },
+      "InboundProcessing": {
+        "CommunicationChannel": {
+          "PartyID": "",
+          "ComponentID": "POS_SYSTEM",
+          "ChannelID": "CC_SOAP_IN"
+        }
+      },
+      "ReceiverInterfaces": [
+        {
+          "Receiver": {
+            "PartyID": "",
+            "ComponentID": "S4HANA"
+          },
+          "QualityOfService": "BE"
+        }
+      ]
+    },
+    {
+      "MasterLanguage": "EN",
+      "IntegratedConfigurationID": {
+        "SenderPartyID": "",
+        "SenderComponentID": "LOGISTICS",
+        "InterfaceName": "ShipmentNotification_OB",
+        "InterfaceNamespace": "http://company.com/xi/Logistics",
+        "ReceiverPartyID": "",
+        "ReceiverComponentID": "WMS"
+      },
+      "ReceiverInterfaces": [
+        {
+          "Receiver": {
+            "PartyID": "",
+            "ComponentID": "WMS"
+          },
+          "QualityOfService": "EO"
+        }
+      ]
+    }
+  ],
+  "communicationChannels": [
+    {
+      "CommunicationChannelID": {
+        "PartyID": "",
+        "ComponentID": "BC_DMALL",
+        "ChannelID": "CC_SMM_RFC_SENDER"
+      },
+      "Direction": "Sender",
+      "TransportProtocol": "RFC",
+      "MessageProtocol": "RFC"
+    },
+    {
+      "CommunicationChannelID": {
+        "PartyID": "",
+        "ComponentID": "POS_SYSTEM",
+        "ChannelID": "CC_SOAP_IN"
+      },
+      "Direction": "Sender",
+      "TransportProtocol": "HTTP",
+      "MessageProtocol": "SOAP 1.1"
+    }
+  ]
+}

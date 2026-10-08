@@ -1,0 +1,13 @@
+# Configuration for SalesOrder_OB Parity & Smoke Testing
+ignorePaths:
+  - TrackingGuid
+  - CreatedTimestamp
+  - ProcessingTimestamp
+  - MessageGuid
+  - SessionId
+
+headers:
+  Content-Type: application/xml
+  X-Client: AetherFlow-Automated-Test
+
+timeoutMs: 15000

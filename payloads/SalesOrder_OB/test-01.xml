@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OrderCreate_OB xmlns="http://company.com/xi/Sales">
+  <OrderHeader>
+    <OrderNumber>{{$randomInt(100000, 999999)}}</OrderNumber>
+    <CustomerId>CUST_45001</CustomerId>
+    <OrderDate>{{$date}}</OrderDate>
+    <TrackingGuid>{{$guid}}</TrackingGuid>
+    <CreatedTimestamp>{{$isoTimestamp}}</CreatedTimestamp>
+  </OrderHeader>
+  <OrderItems>
+    <Item>
+      <LineNumber>10</LineNumber>
+      <Material>MAT_A001</Material>
+      <Quantity>5</Quantity>
+      <UnitPrice>19.99</UnitPrice>
+    </Item>
+  </OrderItems>
+</OrderCreate_OB>
