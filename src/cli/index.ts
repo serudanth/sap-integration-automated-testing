@@ -31,6 +31,7 @@ import {
   sanitizeOverrides,
   type ScenarioCase
 } from '../generator/scenario-manager.js';
+import { startCockpitServer } from '../web/server.js';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -595,5 +596,25 @@ program
     }
   });
 
+// 7. COMMAND: UI (WEB INTERFACE)
+program
+  .command('ui')
+  .description('Launch the SM Retail Integration Testing & Metadata Web UI')
+  .option('-p, --port <number>', 'HTTP port to listen on', (v) => parseInt(v, 10), 4300)
+  .option('--host <address>', 'Bind address (default: 127.0.0.1)', '127.0.0.1')
+  .action(async (options) => {
+    try {
+      const { url } = await startCockpitServer({
+        port: options.port,
+        host: options.host
+      });
+      console.log(`SM Retail Integration Suite UI listening on ${pc.bold(pc.blue(url))}`);
+    } catch (err: any) {
+      console.error(pc.red(`Failed to start Web UI: ${err.message}`));
+      process.exit(1);
+    }
+  });
+
 program.parse(process.argv);
+
 

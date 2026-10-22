@@ -12,6 +12,7 @@
     "build": "tsc",
     "start": "node ./dist/cli/index.js",
     "dev": "tsx ./src/cli/index.ts",
+    "ui": "tsx ./src/cli/index.ts ui",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
