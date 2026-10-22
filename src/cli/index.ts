@@ -25,6 +25,12 @@ import { synthesizeSpecFromChannel } from '../generator/auto-synthesizer.js';
 import { validateDacApInvoiceCompliance } from '../generator/compliance-validator.js';
 import { convertCsvToPostFccXml } from '../generator/wsdl-parser.js';
 import { generateMappingTestPayload } from '../generator/mapping-test-module.js';
+import {
+  loadScenario,
+  saveScenario,
+  sanitizeOverrides,
+  type ScenarioCase
+} from '../generator/scenario-manager.js';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -446,8 +452,8 @@ program
 program
   .command('generate-mapping-test')
   .description('Extract technical schema and mapping dependencies from SAP PI/PO to generate compliant XML for mapping injection')
-  .argument('<interfaceName>', 'Sender Interface Name (e.g. SI_I025_AR_Lazada_OB_AS or I001_DAC_AP_Invoice_Out_Async)')
-  .option('-c, --count <number>', 'Number of detail/repeating records to generate', (v) => parseInt(v, 10), 1)
+  .argument('[interfaceName]', 'Sender Interface Name (optional if --scenario is specified)')
+  .option('-c, --count <number>', 'Number of detail/repeating records to generate', (v) => parseInt(v, 10))
   .option('-l, --layer <layer>', 'Modifier layer to enforce: 1 (Schema Only), 2 (Schema + Mapping Rules), 3 (With Custom Overrides)', (v) => parseInt(v, 10) as 1 | 2 | 3)
   .option('--set <pair>', 'Field override with optional macros (e.g. --set GL_DATE="{{rand_month}}/{{rand_day}}/{{rand_year}}")', (val: string, prev: Record<string, string> = {}) => {
     const eqIdx = val.indexOf('=');
@@ -458,22 +464,56 @@ program
     }
     return prev;
   }, {})
-  .option('--all-optional [boolean]', 'Populate all optional schema fields (default: true)', (v: string) => v.toLowerCase() !== 'false' && v !== '0', true)
+  .option('--all-optional [boolean]', 'Populate all optional schema fields (default: true)', (v: string) => v.toLowerCase() !== 'false' && v !== '0')
   .option('--no-all-optional', 'Omit optional schema fields (generates minimal required payload adhering to schema and overrides)')
+  .option('--scenario <path>', 'Path to scenario file (.yaml or .json) with predefined parameters and macros')
+  .option('--save-scenario <path>', 'Save the active test configuration to a sanitized scenario file (.scenario.yaml)')
   .option('-o, --out <path>', 'Output file or directory path (default: testbed/generated/)', 'testbed/generated')
   .action(async (interfaceName, options) => {
-    const hasOverrides = options.set && Object.keys(options.set).length > 0;
-    const layer = options.layer ?? (hasOverrides ? 3 : 2);
-    const allOptional = options.allOptional !== false;
-    const spinner = ora(`Extracting schema & mapping rules from SAP PI/PO for ${interfaceName}...`).start();
+    let activeInterface = interfaceName;
+    let activeCount = options.count ?? 1;
+    let activeAllOptional = options.allOptional !== undefined ? options.allOptional : true;
+    let activeOverrides = options.set || {};
+    let activeLayer = options.layer;
+    let loadedScenario: ScenarioCase | null = null;
+
+    if (options.scenario) {
+      loadedScenario = loadScenario(options.scenario);
+      if (!activeInterface) {
+        activeInterface = loadedScenario.interface;
+      }
+      if (options.count === undefined && loadedScenario.count !== undefined) {
+        activeCount = loadedScenario.count;
+      }
+      if (options.allOptional === undefined && loadedScenario.allOptional !== undefined) {
+        activeAllOptional = loadedScenario.allOptional;
+      }
+      if (options.layer === undefined && loadedScenario.layer !== undefined) {
+        activeLayer = loadedScenario.layer;
+      }
+      // Merge overrides: scenario overrides first, CLI --set takes precedence
+      activeOverrides = {
+        ...loadedScenario.overrides,
+        ...activeOverrides
+      };
+    }
+
+    if (!activeInterface) {
+      console.error(pc.red("Error: Missing interface name. Please specify <interfaceName> or provide --scenario <path>."));
+      process.exit(1);
+    }
+
+    const hasOverrides = Object.keys(activeOverrides).length > 0;
+    const layer = activeLayer ?? (hasOverrides ? 3 : 2);
+    const spinner = ora(`Extracting schema & mapping rules from SAP PI/PO for ${activeInterface}...`).start();
     try {
-      const result = await generateMappingTestPayload(interfaceName, {
+      const result = await generateMappingTestPayload(activeInterface, {
         layer,
-        allOptional,
-        overrides: options.set,
-        layerOptions: { repeatCount: options.count }
+        allOptional: activeAllOptional,
+        overrides: activeOverrides,
+        layerOptions: { repeatCount: activeCount }
       });
-      spinner.succeed(`Extracted & synthesized payload for ${pc.bold(interfaceName)} (Layer ${result.activeLayer})`);
+      spinner.succeed(`Extracted & synthesized payload for ${pc.bold(activeInterface)} (Layer ${result.activeLayer})`);
 
       let outPath: string;
       if (options.out.endsWith('.xml')) {
@@ -535,6 +575,19 @@ program
       }
 
       console.log(`\nOutput File:    ${pc.green(outPath)}`);
+      if (options.saveScenario) {
+        const scenarioToSave: ScenarioCase = {
+          name: loadedScenario?.name || `${activeInterface} Test Scenario`,
+          interface: activeInterface,
+          description: loadedScenario?.description || `Sanitized automated test scenario for ${activeInterface}`,
+          layer: result.activeLayer,
+          count: activeCount,
+          allOptional: activeAllOptional,
+          overrides: sanitizeOverrides(activeOverrides)
+        };
+        const savedScenarioPath = saveScenario(options.saveScenario, scenarioToSave);
+        console.log(`Saved Scenario: ${pc.green(savedScenarioPath)} (Data sanitized with synthetic macros/masks)`);
+      }
       console.log(`Status:         ✔ Ready for mapping test injection\n`);
     } catch (err: any) {
       spinner.fail(`Generation failed: ${err.message}`);

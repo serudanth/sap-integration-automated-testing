@@ -1,0 +1,23 @@
+name: "DAC AP Invoice - Minimal Compliant Batch"
+interface: "I001_DAC_AP_Invoice_Out_Async"
+description: "Minimal 3-record batch (BEG header, detail invoice, EOF trailer) with transitively mandatory fields and safe generative macros"
+layer: 3
+count: 3
+allOptional: false
+
+# Layer 3 Field Overrides (Data sanitized with generative macros & masks)
+overrides:
+  # Header row values
+  header.FILENAME_WITH_EXTENSION: "{{mask:INV_????_######.TXT}}"
+  header.ZDATE: "{{date:YYYYMMDD}}"
+
+  # Detail row values
+  INVOICE_NUM: "{{mask:INV-######}}"
+  INVOICE_DATE: "{{date:MM/DD/YYYY}}"
+  GL_DATE: "{{date:MM/DD/YYYY}}"
+  INVOICE_AMOUNT: "{{rand_decimal:500,10000,2}}"
+  VENDOR_NUM: "{{mask:VEND-#####}}"
+  VENDOR_SITE_CODE: "{{choice:MANILA,CEBU,DAVAO,MAKATI}}"
+
+  # Trailer row values
+  trailer.TOTAL_RECEIPT_AMOUNT: "{{rand_decimal:5000,50000,2}}"

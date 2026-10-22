@@ -1,0 +1,16 @@
+name: "Lazada AR Standard Receipt - Multi-Record"
+interface: "SI_I025_AR_Lazada_OB_AS"
+description: "Standard 3-record multi-item Lazada AR receipt with synthetic masked IDs and dynamic dates"
+layer: 3
+count: 3
+allOptional: false
+
+# Layer 3 Field Overrides (Data sanitized with generative macros & masks)
+overrides:
+  Trxn_Date: "{{date:YYYY-MM-DD}}"
+  Trxn_Type: "{{choice:Item Price Credit,Shipping Fee (Paid By Customer),Payment Fee}}"
+  Trxn_Number: "{{mask:TRXN-##########}}"
+  Order_No: "{{mask:ORD-######-????}}"
+  Seller_SKU: "{{mask:SKU-???-####}}"
+  Amount: "{{rand_decimal:10,2500,2}}"
+  Paid_Status: "PAID"
