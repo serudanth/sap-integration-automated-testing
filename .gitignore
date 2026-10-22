@@ -14,12 +14,17 @@ reports/*.html
 reports/*.xml
 reports/*.json
 !reports/.gitkeep
+testbed/generated/*
+!testbed/generated/.gitkeep
 *.log
+logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
 # Environment and sensitive data
+.cred/
+.cred/*
 .env
 .env.local
 .env.*.local

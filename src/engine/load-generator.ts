@@ -10,6 +10,9 @@ import type {
 import { assertNonProduction } from '../config/index.js';
 import { resolveTemplate } from '../protocols/template-engine.js';
 import { dispatchRequest } from './dispatcher.js';
+import { logger } from '../logger/index.js';
+
+const log = logger.child({ module: 'stress' });
 
 export interface StressRunnerOptions {
   hostConfig: HostConfig;
@@ -104,6 +107,7 @@ export async function runStressTest(
   const durationSec = Math.max(1, options.durationSeconds);
   const targetTps = Math.max(1, options.targetTps);
   const totalTargetRequests = targetTps * durationSec;
+  log.info(`Starting stress benchmark: ${options.interfaceName} @ ${targetTps} TPS for ${durationSec}s`);
 
   const latencies: number[] = [];
   const statusCodes: Record<number, number> = {};
@@ -184,6 +188,7 @@ export async function runStressTest(
   const achievedTps = Math.round((totalRequests / actualDurationSec) * 100) / 100;
 
   const latencyStats = calculateLatencyStats(latencies);
+  log.info(`Stress benchmark complete: ${totalRequests} requests, ${achievedTps} achieved TPS, p95=${latencyStats.p95}ms`);
 
   return {
     interfaceName: options.interfaceName,

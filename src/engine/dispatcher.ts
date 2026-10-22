@@ -2,6 +2,9 @@ import { request, Agent, setGlobalDispatcher } from 'undici';
 import type { HttpRequestOptions, HttpResponse, HostConfig } from '../types/index.js';
 import { maskUrl } from '../config/index.js';
 import { extractSapMessageId, parseSoapFault } from '../protocols/response-parser.js';
+import { logger } from '../logger/index.js';
+
+const log = logger.child({ module: 'dispatcher' });
 
 // Global undici agent with connection pooling and TLS configuration
 const agent = new Agent({
@@ -85,6 +88,13 @@ export async function dispatchRequest(
   }
 
   const startTime = performance.now();
+  log.logRequest({
+    method: options.method,
+    url: options.url,
+    headers,
+    body: options.body,
+    timeoutMs
+  }, hostConfig);
 
   try {
     const res = await request(options.url, {
@@ -110,7 +120,7 @@ export async function dispatchRequest(
     const messageId = extractSapMessageId(responseHeaders, responseBody);
     const soapFault = parseSoapFault(responseBody);
 
-    return {
+    const httpResponse: HttpResponse = {
       statusCode: res.statusCode,
       statusText: `${res.statusCode}`,
       headers: responseHeaders,
@@ -120,10 +130,15 @@ export async function dispatchRequest(
       isSoapFault: soapFault !== null,
       soapFaultDetails: soapFault || undefined
     };
+
+    log.logResponse(httpResponse, options.url);
+
+    return httpResponse;
   } catch (err: any) {
     const durationMs = Math.round(performance.now() - startTime);
     const maskedUrl = maskUrl(options.url);
     const errorMessage = err?.message || 'Unknown network error';
+    log.error(`HTTP Request Failed [${options.method || 'POST'} ${maskedUrl}] (${durationMs}ms): ${errorMessage}`);
     throw new Error(
       `HTTP Request Failed [${options.method || 'POST'} ${maskedUrl}] (${durationMs}ms): ${errorMessage}`
     );

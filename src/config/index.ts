@@ -3,6 +3,9 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { HostConfig } from '../types/index.js';
 
+export * from './aetherflow-config.js';
+export * from './heuristics.js';
+
 export class SafetyFenceError extends Error {
   constructor(message: string) {
     super(message);
@@ -99,13 +102,18 @@ export function maskUrl(rawUrl: string): string {
 /**
  * Recursively masks sensitive fields in an object or log entry.
  */
-export function sanitizeForLogging<T>(obj: T): T {
+export function sanitizeForLogging<T>(obj: T, seen = new WeakSet<object>()): T {
   if (typeof obj !== 'object' || obj === null) {
     return obj;
   }
 
+  if (seen.has(obj as object)) {
+    return '[Circular]' as unknown as T;
+  }
+  seen.add(obj as object);
+
   if (Array.isArray(obj)) {
-    return obj.map((item) => sanitizeForLogging(item)) as unknown as T;
+    return obj.map((item) => sanitizeForLogging(item, seen)) as unknown as T;
   }
 
   const copy: Record<string, any> = {};
@@ -113,7 +121,7 @@ export function sanitizeForLogging<T>(obj: T): T {
 
   for (const [k, v] of Object.entries(obj)) {
     if (typeof v === 'object' && v !== null) {
-      copy[k] = sanitizeForLogging(v);
+      copy[k] = sanitizeForLogging(v, seen);
     } else if (sensitiveKeys.some((s) => k.toLowerCase().includes(s))) {
       copy[k] = '******** (REDACTED)';
     } else {

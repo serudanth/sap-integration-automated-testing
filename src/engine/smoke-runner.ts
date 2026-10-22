@@ -13,6 +13,9 @@ import { resolveTemplate } from '../protocols/template-engine.js';
 import { dispatchRequest } from './dispatcher.js';
 import { resolveTargetUrl } from '../discovery/endpoint-generator.js';
 import { pollAsyncMessageStatus } from '../verifier/async-poller.js';
+import { logger } from '../logger/index.js';
+
+const log = logger.child({ module: 'smoke' });
 
 export interface SmokeRunnerOptions {
   concurrency?: number;
@@ -59,6 +62,7 @@ export async function runSmokeTests(
   const timeoutMs = options.timeoutMs || 10000;
   const results: SmokeTestResult[] = [];
   const startTime = Date.now();
+  log.info(`Executing smoke tests across ${endpoints.length} endpoints (concurrency: ${concurrency}, timeout: ${timeoutMs}ms)`);
 
   const dispatcher = options.customDispatcher || dispatchRequest;
 
@@ -147,6 +151,12 @@ export async function runSmokeTests(
       }
 
       results.push(result);
+      if (result.passed) {
+        log.info(`[${results.length}/${total}] PASSED: ${endpoint.interfaceName} (${result.durationMs}ms)`);
+      } else {
+        log.warn(`[${results.length}/${total}] FAILED: ${endpoint.interfaceName} - ${result.error || 'Unknown error'}`);
+      }
+
       if (options.onProgress) {
         options.onProgress(result, results.length, total);
       }
@@ -158,6 +168,7 @@ export async function runSmokeTests(
 
   const passedCount = results.filter((r) => r.passed).length;
   const failedCount = results.length - passedCount;
+  log.info(`Smoke test run complete: ${passedCount} passed, ${failedCount} failed (${Date.now() - startTime}ms)`);
 
   return {
     total: results.length,

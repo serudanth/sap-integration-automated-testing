@@ -2,7 +2,10 @@
  * Core type definitions for AetherFlow SAP Test Harness
  */
 
-export type QualityOfService = 'BE' | 'EO';
+export type QualityOfService = 'BE' | 'EO' | 'EOIO';
+
+export * from './scenario.js';
+export * from './suite.js';
 
 export interface InventoryMeta {
   id: string;
@@ -27,8 +30,11 @@ export interface ExtractionSummary {
   warnings: string[];
 }
 
-export type IcoRecord = Record<string, any>;
-export type ChannelRecord = Record<string, any>;
+export * from './raw-inventory.js';
+export * from './raw-cpi.js';
+
+export type IcoRecord = import('./raw-inventory.js').RawIntegratedConfiguration;
+export type ChannelRecord = import('./raw-inventory.js').RawCommunicationChannel;
 
 export interface InventoryFile {
   _meta: InventoryMeta;

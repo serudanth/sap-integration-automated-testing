@@ -11,6 +11,9 @@ import type {
 import { resolveTemplate } from '../protocols/template-engine.js';
 import { dispatchRequest } from './dispatcher.js';
 import { canonicalDiff } from '../verifier/canonical-diff.js';
+import { logger } from '../logger/index.js';
+
+const log = logger.child({ module: 'parity' });
 
 export interface ParityRunnerOptions {
   pipoHost: HostConfig;
@@ -76,6 +79,9 @@ export async function runParityTest(
   const cpiPath = options.cpiUrlPath || payloadConfig.targetPath || `/http/${options.interfaceName}`;
   const cpiUrl = `${cpiScheme}://${options.cpiHost.host}:${options.cpiHost.port}${cpiPath}`;
 
+  log.info(`Starting parity dual-run comparison for interface: ${options.interfaceName}`);
+  log.debug(`PI/PO target: ${pipoUrl}, CPI target: ${cpiUrl}`);
+
   const headers = {
     'Content-Type': 'application/xml; charset=utf-8',
     ...(payloadConfig.headers || {})
@@ -126,6 +132,11 @@ export async function runParityTest(
     cpiResponse.statusCode >= 200 &&
     cpiResponse.statusCode < 300 &&
     diff.matched;
+
+  log.info(`Parity comparison finished for ${options.interfaceName}: ${passed ? 'PASSED' : 'FAILED'} (matched: ${diff.matched}, differences: ${diff.differences.length})`);
+  if (!passed && diff.differences.length > 0) {
+    log.warn(`Discrepancies found in ${options.interfaceName} (${diff.differences.length}):`, diff.differences.slice(0, 5));
+  }
 
   return {
     interfaceName: options.interfaceName,
